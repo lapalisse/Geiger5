@@ -25,10 +25,10 @@ Also, the values are displayed, after sufficient data has been collected.
 
 ## Example
 <pre>
-++++++++++++++++++<br>
-|0.35 ^0.12 v0.15|<br>
-|mSv/y <__345'__>|<br>
-++++++++++++++++++<br>
+++++++++++++++++++
+|0.35 ^0.12 v0.15|
+|mSv/y <__345'__>|
+++++++++++++++++++
   </pre>
 The tube has been under tension for 345 minutes.
 

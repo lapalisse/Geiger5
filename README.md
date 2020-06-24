@@ -25,9 +25,9 @@ Also, the values are displayed, after sufficient data has been collected.
 
 ## Example
 
-++++++++++++++++++
-|0.35 ^0.12 v0.15|
-|mSv/y <__345'__>|
-++++++++++++++++++
+++++++++++++++++++<br>
+|0.35 ^0.12 v0.15|<br>
+|mSv/y <__345'__>|<br>
+++++++++++++++++++<br>
 
 The tube has been under tension for 345 minutes.

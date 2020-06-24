@@ -1,3 +1,5 @@
+#include <Arduino.h>
+
 #include <EEPROM.h>
 #include <LiquidCrystal.h>
 
@@ -88,6 +90,17 @@ byte not_significant_details[8] = {
   B00000,
 };
 
+byte stable_details[8] = {
+  B00000,
+  B00100,
+  B00110,
+  B00111,
+  B00110,
+  B00100,
+  B00000,
+  B00000,
+};
+
 const char MU = '\001';
 const char TUBE_LEFT = '\002';
 const char TUBE_MIDDLE = '\003';
@@ -95,6 +108,7 @@ const char TUBE_RIGHT = '\004';
 const char GOING_UP = '\005';
 const char GOING_DOWN = '\006';
 const char NOT_SIGNIFICANT = '\007';
+const char STABLE = '\000';
 
 // mSv/year
 const float EFFECTIVE_DOSE      = 1; 
@@ -119,11 +133,11 @@ const char* DOSE_TEXTS[N_DOSES] = {
   ">Deadly   "
 };
 
-// Slightly more sophisticated Geiger-Müller counter software
+// Advanced Geiger-Müller counter software
 //
 // General idea: - Displays click count or average radioactivity in the past
 //                 few seconds or minutes or..., or in a past interval
-//               - Cpm or uSv/h
+//               - Cpm, uSv/h or mSv/y
 //               - Remember values depending on the size of your memory
 //                 1 hour = 60*60*4 = 7200 bytes with 32-bit precision
 
@@ -132,16 +146,6 @@ typedef unsigned long click_count_t; // 32-bit: prefer this value: safe!
 //typedef unsigned char click_count_t; // 8-bit: risky value!!!
 
 const bool PARANOIA = true;
-
-// We store all click sums during every second in an array
-// Danger! The amount of memory available on your Arduino
-//         may very well be limited!
-// Example: 1 hour = 60*60 = 3600 seconds
-const unsigned long MEMORY_SIZE = 10 * 60 + 1; // +1 is important!!
-const unsigned long BLOCK_SIZE = 1; // Number of seconds : 2 = storing every 2 seconds!
-click_count_t values[MEMORY_SIZE];
-long n_read_values;
-long values_index;
 
 click_count_t counts; //variable for GM Tube events
 unsigned long orgMillis; //variable for measuring time
@@ -159,26 +163,6 @@ long normalize(long value, long max_excluded) {
   }
 
   return value;
-}
-
-click_count_t count_clicks_since_last_seconds(long n_seconds) {
-  if (PARANOIA && n_seconds / BLOCK_SIZE > MEMORY_SIZE - 1) {
-    Serial.println(F("Warning! count_clicks_since_last_seconds(): n_seconds too big! Trying to continue with a smaller value..."));
-    n_seconds = (MEMORY_SIZE - 1) * BLOCK_SIZE;
-  }
-  
-  return values[normalize(values_index - 1, MEMORY_SIZE)] - values[normalize(values_index - 1 - n_seconds / BLOCK_SIZE, MEMORY_SIZE)];
-}
-
-float avg_clicks_per_second_since_last_seconds(long n_seconds = MEMORY_SIZE - 1) {
-  if (PARANOIA && n_seconds / BLOCK_SIZE > MEMORY_SIZE - 1) {
-    Serial.println(F("Warning! avg_clicks_per_second_since_last_seconds(): n_seconds too big! Trying to continue with a smaller value..."));
-    n_seconds = (MEMORY_SIZE -1) * BLOCK_SIZE;
-  }
-  
-  click_count_t min_possible_value = min(n_read_values, n_seconds);
-
-  return float(count_clicks_since_last_seconds(min_possible_value)) / min_possible_value;
 }
 
 void impulse() {
@@ -356,23 +340,25 @@ void put_EEPROM_value() {
 const int rs = 20, en = 21, d4 = 4, d5 = 5, d6 = 6, d7 = 7;
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 int display_mode = 2; // 0 = cpm, 1 = uSv/h, 2 = mSv/year
+int new_display_mode = display_mode; 
 
 int n_different_buffers = 0;
 int different_buffers_index[N_TERMS];
 
 // Short-term, mid-term, long-term (in seconds)
-float unit_coeffs[N_TERMS] = { 1.0, CONVERT_CPM_TO_uSv_PER_HOUR, CONVERT_CPM_TO_mSv_PER_YEAR };
+float unit_coeffs[N_TERMS] = { 60.0, CONVERT_CPM_TO_uSv_PER_HOUR, CONVERT_CPM_TO_mSv_PER_YEAR };
 const char* units[] = { "cpm", "\001Sv/s", "mSv/y" };
-int digits[] = { 0, 2, 2 };
+int digits[] = { 2, 2, 2 };
 
 #define SAVE_MEMORY
 
 #ifdef SAVE_MEMORY
 
-int32_t duration_windows[N_TERMS] = { 10, 3*60, 10*60 };
+//int32_t duration_windows[N_TERMS] = { 10, 3*60, 10*60 };
+int32_t duration_windows[N_TERMS] = { 60, 3*60, 10*60 };
 int32_t granularities[N_TERMS] = { 1, 15, 60 };
 
-DeltaBuffer<click_count_t> short_term_buf(max(15, 2 * duration_windows[0] / granularities[0]));
+DeltaBuffer<click_count_t> short_term_buf(max(60, 2 * duration_windows[0] / granularities[0]));
 DeltaBuffer<click_count_t> mid_term_buf(2 * duration_windows[1] / granularities[1]);
 DeltaBuffer<click_count_t> long_term_buf(2 * duration_windows[2] / granularities[2]);
 
@@ -389,6 +375,26 @@ DeltaBuffer<click_count_t>* buffers[N_TERMS] = { &one_buf, &one_buf, &one_buf };
 
 #endif
 
+const int buttonPin = 3;
+int buttonVal;
+
+void buttonChanged() {
+  int val = digitalRead(buttonPin);
+
+  if (val != buttonVal && val == HIGH) {      
+    delayMicroseconds(1000); // works, as well as millis(): but will never be increased!
+    // Debouncing!
+
+    val = digitalRead(buttonPin);
+
+    if (val == HIGH) {
+      // Confirmed!
+      new_display_mode = normalize(display_mode + 1, 3);
+    }
+  }
+  
+  buttonVal = val;
+}
 
 void setup() {
   counts = 0;
@@ -423,16 +429,6 @@ void setup() {
     Serial.println(different_buffers_index[j]);
   }
   
-  // Not needed:
-  /*for (int8_t i = 0; i < MEMORY_SIZE; i++) {
-    values[i] = 0;
-  }*/
-  values[MEMORY_SIZE + 1] = 0;
-  values[0] = 0;
-
-  n_read_values = 0;
-  values_index = 0;
-
   // The following calculationn shows that you need to store 32-bit values
   // if you may be facing high values of radiation...
   
@@ -457,10 +453,6 @@ void setup() {
   Serial.print(saturation_at_uSv_per_hour);
   Serial.println(F(" uSv/h..."));
 
-
-  Serial.println();
-  Serial.println(normalize(-1, MEMORY_SIZE));
-
   lcd.begin(16, 2);
   pinMode(lcdContrastPin, OUTPUT);   // sets the pin as output
   analogWrite(lcdContrastPin, 90); // contrast
@@ -471,6 +463,7 @@ void setup() {
   lcd.createChar(GOING_UP, going_up_details);
   lcd.createChar(GOING_DOWN, going_down_details);
   lcd.createChar(NOT_SIGNIFICANT, not_significant_details);
+  lcd.createChar(STABLE, stable_details);
   
 #ifdef STORE_MINUTES_IN_EEPROM
   init_EEPROM_value();
@@ -485,6 +478,10 @@ void setup() {
 
     orgMillis = millis();
     targetMillis = orgMillis + 1000;
+
+    // Push button change:
+    pinMode(buttonPin, INPUT);
+    attachInterrupt(digitalPinToInterrupt(buttonPin), buttonChanged, CHANGE);
 }
 
 void loop() {
@@ -499,12 +496,6 @@ void loop() {
     unsigned second_number = (currentMillis - orgMillis) / 1000;
       
     targetMillis += 1000;
-    values[values_index] = counts;
-    values_index = normalize(values_index + 1, MEMORY_SIZE);
-
-    if (n_read_values != MEMORY_SIZE) {
-      n_read_values++;
-    }
 
     for (i = 0; i < n_different_buffers; i++) {
         if (second_number % granularities[different_buffers_index[i]] == 0) {
@@ -529,34 +520,10 @@ void loop() {
       }
     }
 #endif
+    // Good place to change the display mode!
+    display_mode = new_display_mode;
 
-    Serial.print("R --> ");
-    Serial.print(n_read_values);
-    Serial.print(" ");
-    Serial.print(counts);
-    Serial.print(" ");
-    Serial.print(values_index);
-    Serial.print(" ");
-    Serial.print(count_clicks_since_last_seconds(1));
-    Serial.print(" ");
-    Serial.print(count_clicks_since_last_seconds(10));
-    Serial.print(" ");
-    Serial.print(count_clicks_since_last_seconds(60)); // cpm!
-    Serial.print(" ");
-    Serial.print(count_clicks_since_last_seconds(10*60));
-    Serial.print(" ");
-    Serial.print(count_clicks_since_last_seconds(10*60));
-    Serial.print(" ");
-    Serial.print(avg_clicks_per_second_since_last_seconds(10*60) * 60, 4);
-    Serial.print(" cpm (hour avg) ");
-    Serial.print(avg_clicks_per_second_since_last_seconds(10*60) * CONVERT_CPM_TO_uSv_PER_HOUR, 4);
-    Serial.print(F(" uSv/h "));
-    Serial.print(avg_clicks_per_second_since_last_seconds(10*60) * CONVERT_CPM_TO_uSv_PER_HOUR * (365.25 * 24 / 1000), 4);
-    Serial.print(F(" mSv/an "));
-    Serial.print(avg_clicks_per_second_since_last_seconds(10*60) * CONVERT_CPM_TO_mSv_PER_YEAR, 4);
-    Serial.print(F(" mSv/an (v2)"));
-    Serial.println();
-
+    // Extensive debug:
     for (i = 0; i < N_TERMS; i++) {
       Serial.print(i);
       Serial.print(" --> ");
@@ -590,7 +557,7 @@ void loop() {
       Serial.print(F(" mSv/an (v2)"));
       
       Serial.println();
-      
+
       if (buffers[i]->hasSignificant(1)) {
         v[i] = buffers[i]->avg_last(duration_windows[i] / granularities[i]) / granularities[i] * unit_coeffs[display_mode];
         if (i == 0) {
@@ -612,8 +579,9 @@ void loop() {
     const static int8_t x[N_TERMS] = { 0, 6, 12 };
     const static int8_t y[N_TERMS] = { 0, 0, 0 };
 
+    // To force blinking
     short_term_radioactivity_in_mSv_per_year *= 100;
-    
+
     lcd.clear();
     // 3 values: short, mid and long term
     for (i = 0; i < N_TERMS; i++) {
@@ -633,7 +601,8 @@ void loop() {
       int32_t base_calc = duration_windows[i] / granularities[i];
       
       if (!buffers[i]->hasSignificant(base_calc)) {
-        lcd.print(NOT_SIGNIFICANT);
+        //lcd.print(NOT_SIGNIFICANT);
+        lcd.print('?');
       } else if (buffers[i]->hasSignificant(2 * base_calc)) {
         click_count_t val_p1 = buffers[i]->count_between(-2 * base_calc, -base_calc);
         click_count_t val_p2 = buffers[i]->count_between(-base_calc, 0);
@@ -643,7 +612,7 @@ void loop() {
         } else if (val_p2 <= (100 - PERCENT_EVOL_DETECT) * val_p1 / 100) {
           lcd.print(GOING_DOWN);
         } else {
-          lcd.print(" ");
+          lcd.print(STABLE);
         }
       } else {
         lcd.print(" ");

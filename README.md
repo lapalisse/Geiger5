@@ -31,3 +31,6 @@ Also, the values are displayed, after sufficient data has been collected.
 ++++++++++++++++++<br>
 
 The tube has been under tension for 345 minutes.
+
+## Memory
+You'll need abount 16kb of SRAM, and as much RAM memory as you've got, because we store the values for as long as needed.

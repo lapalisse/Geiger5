@@ -31,3 +31,9 @@ The tube has been under tension for 345 minutes.
 
 ## Memory
 You'll need abount 16kb of SRAM, and as much RAM memory as you've got, because we store the values for as long as needed.
+
+## Misc
+The use of EEPROM to save the number of minutes the tube has been operating is a bit funky : the life expectancy of a tube is high.
+We save the value after 1 minute, 2 minutes, 4 minutes, 8... to avoid too many EEPROM writes (you have about 100000 writes until it starts failing).
+
+I'm working on a silly library to improve this...

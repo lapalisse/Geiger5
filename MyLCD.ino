@@ -10,6 +10,7 @@
 
 #include "MyLCD.h"
 
+// mu character to display uSv/s
 byte mu_details[8] = {
   B00000,
   B00000,
@@ -55,6 +56,7 @@ byte tube_right_details[8] = {
   B00000,
 };
 
+// Displaying value change
 byte going_up_details[8] = {
   B00100,
   B01110,
@@ -110,20 +112,22 @@ byte stable_details[8] = {
 };
 
 const char MU = '\001';
-
 const char TUBE_LEFT = '\002';
 const char TUBE_MIDDLE = '\003';
 const char TUBE_RIGHT = '\004';
-
 const char GOING_UP = '\005';
 const char GOING_DOWN = '\006';
 const char NOT_SIGNIFICANT = '\007';
 const char STABLE = '\000';
 
-const int rs = 20, en = 21, d4 = 4, d5 = 5, d6 = 6, d7 = 7;
+static const int rs = 20, en = 21, d4 = 4, d5 = 5, d6 = 6, d7 = 7;
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 
 void init_my_lcd() {
+  lcd.begin(16, 2);
+  pinMode(lcdContrastPin, OUTPUT);   // sets the pin as output
+  analogWrite(lcdContrastPin, 90); // contrast
+
   lcd.createChar(MU, mu_details);
   lcd.createChar(TUBE_LEFT, tube_left_details);
   lcd.createChar(TUBE_MIDDLE, tube_middle_details);

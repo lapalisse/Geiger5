@@ -16,8 +16,8 @@ long normalize(long value, long max_excluded) {
   return value;
 }
 
+static const int32_t powerOf10[] = { -1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000 };
 
-const int32_t powerOf10[] = { -1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000 };
 const int ADD_SPACES = 1;
 const int JUSTIFY_CENTER = 2;
 const int JUSTIFY_LEFT = 4;

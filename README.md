@@ -1,7 +1,7 @@
 # Geiger5
 Advanced Arduino Geiger-Müller counter software.
 
-See photos to have an idea of what it looks like...
+![alt text](https://raw.githubusercontent.com/lapalisse/Geiger5/master/photos/Capture%20d%E2%80%99e%CC%81cran%202020-06-26%20a%CC%80%2013.56.04.png)
 
 ## Displays the following
 1. Short term, mid term and long term radioactivity in cpm, uSv/h or mSv/y.
@@ -23,26 +23,10 @@ You can also change the units used on screen by pressing a push button.
 
 Also, the values are displayed, after sufficient data has been collected.
 
-## Example
+## Photos
 
-![alt text](https://raw.githubusercontent.com/lapalisse/Geiger5/master/photos/Capture%20d%E2%80%99e%CC%81cran%202020-06-26%20a%CC%80%2013.56.04.png)
+![alt text](https://raw.githubusercontent.com/lapalisse/Geiger5/master/photos/IMG_1166.jpeg)
 
-<pre>
-+----------------+
-|0.35 ^0.12 v0.15|
-|mSv/y <__345'__>|
-+----------------+
-  
-+----------------+
-|20   ^18   v19  |
-|cpm   <__345'__>|
-+----------------+
-
-+----------------+
-|14.1 ^3.04 v2.94|
-|> SEARCH COVER  | (blinking)
-+----------------+
-  </pre>
 The tube has been under tension for 345 minutes.
 
 ## Memory

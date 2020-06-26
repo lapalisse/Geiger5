@@ -32,7 +32,16 @@ The tube has been under tension for 345 minutes.
 Detects dangerosity thresholds : they will be displayed and blinking, as in the following example:
 ![alt text](https://raw.githubusercontent.com/lapalisse/Geiger5/master/photos/IMG_1169.jpeg)
 
-
+Using the following thresholds:
+<pre>
+// mSv/y
+const float EFFECTIVE_DOSE      = 1; 
+const float SEARCH_COVER_DOSE   = 10;
+const float NUCLEAR_WORKER_DOSE = 20;
+const float GO_AWAY_DOSE        = 50; 
+const float HIGH_DOSE           = 100;
+const float DEADLY_DOSE         = 1000;
+</pre>
 
 ## Memory
 You'll need abount 16kb of SRAM, and as much RAM memory as you've got. 

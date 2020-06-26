@@ -29,8 +29,17 @@ Also, the values are displayed, after sufficient data has been collected.
 
 The tube has been under tension for 345 minutes.
 
+Detects dangerosity thresholds : they will be displayed and blinking, as in the following example:
+![alt text](https://raw.githubusercontent.com/lapalisse/Geiger5/master/photos/IMG_1169.jpeg)
+
+
+
 ## Memory
-You'll need abount 16kb of SRAM, and as much RAM memory as you've got, because we store the values for as long as needed.
+You'll need abount 16kb of SRAM, and as much RAM memory as you've got. 
+For the RAM, it depends for how long you'll be saving values.
+Example: Long term values is based on a 10 minute basis, and values are stored every minute. This will use 10*4 = 40 bytes.
+But if you want a 60 minute long term value, and will be storing every 15 seconds, that makes it: 60*4*4 = 960 bytes.
+etc.
 
 ## Misc
 The use of EEPROM to save the number of minutes the tube has been operating is a bit funky : the life expectancy of a tube is high.

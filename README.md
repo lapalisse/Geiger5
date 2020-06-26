@@ -24,6 +24,9 @@ You can also change the units used on screen by pressing a push button.
 Also, the values are displayed, after sufficient data has been collected.
 
 ## Example
+
+![alt text](https://raw.githubusercontent.com/lapalisse/Geiger5/master/photos/Capture%20d%E2%80%99e%CC%81cran%202020-06-26%20a%CC%80%2013.56.04.png)
+
 <pre>
 +----------------+
 |0.35 ^0.12 v0.15|

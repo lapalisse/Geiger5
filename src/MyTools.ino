@@ -1,3 +1,10 @@
+//
+//  MyTools.ino
+//  ArduinoTools
+//
+//  Created by Ludovic Bertsch on 18/06/2020.
+//  Copyright © 2020 Ludovic Bertsch. All rights reserved.
+//
 #include <Arduino.h>
 
 #include "MyTools.h"
@@ -109,4 +116,37 @@ String formatString(const float value, const int n_digits, const int n_character
   }
 
   return str;
+}
+
+String formatTimeMinutes(const uint32_t time_in_minutes) {
+  String result;
+  
+  if (time_in_minutes < 60) {
+    return String(time_in_minutes) + '\'';
+  } else {
+    uint32_t hours = time_in_minutes / 60;
+    uint32_t minutes = time_in_minutes % 60;
+    
+    return String(hours) + 'h' + String(minutes);
+  }
+}
+
+uint32_t change_of_level[] = { 1, 60, 60, 24, 30, 12 };
+const char* change_of_level_unit[] = { "s", "m", "h", "d", "month", "year" };
+
+String formatTime(const uint32_t time_value, const time_unit_t units) {
+  String result;
+
+  switch (units) {
+    case TIME_UNIT_MINUTES:
+      if (time_value < 60) {
+        return String(time_value) + '\'';
+      } else {
+        uint32_t hours = time_value / 60;
+        uint32_t minutes = time_value % 60;
+        
+        return String(hours) + 'h' + String(minutes);
+      }
+      break;
+  }
 }

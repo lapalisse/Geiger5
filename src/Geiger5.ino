@@ -1,4 +1,14 @@
+//
+//  Geiger5.ino
+//  ArduinoTools
+//
+//  Created by Ludovic Bertsch on 18/06/2020.
+//  Copyright © 2020 Ludovic Bertsch. All rights reserved.
+//
+
 #include <Arduino.h>
+
+#include <stdlib.h>
 
 #include <assert.h>
 
@@ -13,9 +23,6 @@
 const int geigerPin = 18;
 const int lcdContrastPin = 2;
 const int buttonPin = 3;
-
-const int32_t N_TERMS = 3;
-const int32_t PERCENT_EVOL_DETECT = 20;
 
 // Advanced Geiger-Müller counter software
 //
@@ -40,6 +47,7 @@ void impulse() {
   clicks++;
 }
 
+// Convert in between different radioactivity units
 const unsigned long ONE_uSv_PER_HOUR_IN_CPM = 151; // Tube dependend!
 const float CONVERT_CPM_TO_uSv_PER_HOUR = 60.0 / ONE_uSv_PER_HOUR_IN_CPM;
 const float CONVERT_uSv_PER_HOUR_TO_mSv_PER_YEAR = 365.25 * 24 / 1000;
@@ -58,41 +66,24 @@ uint32_t factor = 1; // then 2, 4, 8, ...
 
 #endif
 
+// Display configuration:
+const int32_t N_DISPLAYED = 3;
+
+#include "config/small_1kb.h"
+//#include "config/big_8kb.h"
+//const int32_t PERCENT_EVOL_DETECT = 20;
+
 int display_mode = 2; // 0 = cpm, 1 = uSv/h, 2 = mSv/year
 int new_display_mode = display_mode; 
 
 int n_different_buffers = 0;
-int different_buffers_index[N_TERMS];
+int different_buffers_index[N_DISPLAYED];
 
 // Short-term, mid-term, long-term (in seconds)
-float unit_coeffs[N_TERMS] = { 60.0, CONVERT_CPM_TO_uSv_PER_HOUR, CONVERT_CPM_TO_mSv_PER_YEAR };
+float unit_coeffs[N_DISPLAYED] = { 60.0, CONVERT_CPM_TO_uSv_PER_HOUR, CONVERT_CPM_TO_mSv_PER_YEAR };
 const char* units[] = { "cpm", "\001Sv/s", "mSv/y" };
 int digits[] = { 2, 2, 2 };
 
-#define SAVE_MEMORY
-
-#ifdef SAVE_MEMORY
-
-//int32_t duration_windows[N_TERMS] = { 10, 3*60, 10*60 };
-int32_t duration_windows[N_TERMS] = { 60, 3*60, 10*60 };
-int32_t granularities[N_TERMS] = { 1, 15, 60 };
-
-DeltaBuffer<click_count_t> short_term_buf(max(60, 2 * duration_windows[0] / granularities[0]));
-DeltaBuffer<click_count_t> mid_term_buf(2 * duration_windows[1] / granularities[1]);
-DeltaBuffer<click_count_t> long_term_buf(2 * duration_windows[2] / granularities[2]);
-
-DeltaBuffer<click_count_t>* buffers[N_TERMS] = { &short_term_buf, &mid_term_buf, &long_term_buf };
-
-#else
-
-// Works well with a Mega2560 where we'got plenty of memory!
-int32_t duration_windows[N_TERMS] = { 10, 1*60, 3*60 };
-int32_t granularities[N_TERMS] = { 1, 1, 1 };
-
-DeltaBuffer<click_count_t> one_buf(2 * duration_windows[N_TERMS - 1]);
-DeltaBuffer<click_count_t>* buffers[N_TERMS] = { &one_buf, &one_buf, &one_buf };
-
-#endif
 
 int buttonVal;
 
@@ -141,7 +132,7 @@ void setup() {
   // Detect if we are reusing a buffer several times
   // and create an index of indices that are not reused
   // Needed to avoid incrementing a buffer several times!
-  for (int8_t i1 = 0; i1 < N_TERMS; i1++) {
+  for (int8_t i1 = 0; i1 < N_DISPLAYED; i1++) {
     int8_t i2 = 0;
 
     while (i2 < n_different_buffers && buffers[different_buffers_index[i2]] != buffers[i1]) {
@@ -195,8 +186,7 @@ void setup() {
 
   lcd.clear();
   lcd.print("Tube use: ");
-  lcd.print(minute_count);
-  lcd.print("'");
+  lcd.print(formatTime(minute_count, TIME_UNIT_MINUTES));
   lcd.setCursor(0, 1);
   lcd.print("\002\003\003\003\003\003\003\003\003\003\003\003\003\003\003\004");
 #endif
@@ -205,7 +195,7 @@ void setup() {
 void loop() {
   int8_t i;
   unsigned long currentMillis = millis();
-  float v[N_TERMS];
+  float v[N_DISPLAYED];
   float short_term_radioactivity_in_mSv_per_year;
 
   // We save the click value for a block of BLOCK_SIZE seconds
@@ -242,7 +232,7 @@ void loop() {
     display_mode = new_display_mode;
 
     // Extensive debug:
-    for (i = 0; i < N_TERMS; i++) {
+    for (i = 0; i < N_DISPLAYED; i++) {
       Serial.print(i);
       Serial.print(" --> ");
       Serial.print(buffers[i]->getIndex());
@@ -291,15 +281,15 @@ void loop() {
     // Displaying
 
     // Positions of displayed values:
-    const static int8_t x[N_TERMS] = { 0, 6, 12 };
-    const static int8_t y[N_TERMS] = { 0, 0, 0 };
+    const static int8_t x[N_DISPLAYED] = { 0, 6, 12 };
+    const static int8_t y[N_DISPLAYED] = { 0, 0, 0 };
 
     // To force blinking
     short_term_radioactivity_in_mSv_per_year *= 100;
 
     lcd.clear();
     // 3 values: short, mid and long term
-    for (i = 0; i < N_TERMS; i++) {
+    for (i = 0; i < N_DISPLAYED; i++) {
       lcd.setCursor(x[i], y[i]);
       if (isnan(v[i])) {
         // No value:
@@ -310,7 +300,7 @@ void loop() {
     }
 
     // Up, nothing, down indicators
-    for (i = 1; i < N_TERMS; i++) {
+    for (i = 1; i < N_DISPLAYED; i++) {
       lcd.setCursor(x[i] - 1, y[i]);
 
       int32_t base_calc = duration_windows[i] / granularities[i];
@@ -371,28 +361,27 @@ void loop() {
     // v2:
     // Blink 3s with a warning / 1s with units + minute count
     lcd.setCursor(0, 1);
-    if (short_term_radioactivity_in_mSv_per_year >= DOSES[0] && second_number % 4 != 0) {
+    if (short_term_radioactivity_in_mSv_per_year >= doses[0] && second_number % 4 != 0) {
       // Look for what dose:
       int i = 1;
 
-      while (i < N_DOSES && DOSES[i] < short_term_radioactivity_in_mSv_per_year) {
+      while (i < N_DOSES && doses[i] < short_term_radioactivity_in_mSv_per_year) {
         i++;
       }
 
       // Blink!
-      lcd.print(DOSE_LONG_TEXTS[i - 1]);
+      lcd.print(dose_texts16[i - 1]);
     } else {
       lcd.setCursor(0, 1);
       lcd.print(justify(units[display_mode], 6));
 
-      lcd.setCursor(6, 1);
-      //lcd.print("\002\003\003\003\003\003\003\003\003\004");
+      // Display a nice rendering of a Geiger tube
       const static int tube_length = 10; // in characters
       String min_count = String();
       min_count.reserve(tube_length);
 
-      min_count += String(minute_count);
-      min_count += '\'';
+      min_count += String(formatTime(minute_count, TIME_UNIT_MINUTES));
+      //min_count += '\'';
       min_count = TUBE_LEFT + justify(min_count, JUSTIFY_CENTER, tube_length - 2, TUBE_MIDDLE) + TUBE_RIGHT;
 
       lcd.setCursor(6, 1);

@@ -1,5 +1,5 @@
 //
-//  DeltaBuffer.hpp
+//  DeltaBuffer.h
 //  ArduinoTools
 //
 //  Created by Ludovic Bertsch on 18/06/2020.

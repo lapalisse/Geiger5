@@ -1,5 +1,5 @@
 //
-//  DeltaBuffer.hpp
+//  MyLCD.ino
 //  ArduinoTools
 //
 //  Created by Ludovic Bertsch on 18/06/2020.
@@ -10,7 +10,7 @@
 
 #include "MyLCD.h"
 
-// mu character to display uSv/s
+// greek mu character to display uSv/s
 byte mu_details[8] = {
   B00000,
   B00000,
@@ -79,16 +79,6 @@ byte going_down_details[8] = {
   B00000,
 };
 
-/*byte not_significant_details[8] = {
-  B00100,
-  B01010,
-  B10001,
-  B00000,
-  B10001,
-  B01010,
-  B00100,
-  B00000,
-};*/
 byte not_significant_details[8] = {
   B00000,
   B00100,

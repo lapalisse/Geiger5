@@ -55,3 +55,11 @@ The use of EEPROM to save the number of minutes the tube has been operating is a
 We save the value after 1 minute, 2 minutes, 4 minutes, 8... to avoid too many EEPROM writes (you have about 100000 writes until it starts failing).
 
 I'm working on a silly library to improve this...
+
+## Test with a source of radiation
+
+Just got a capsule that is meant for detecting smoke: it contains a bit of Americium.
+![alt text](https://raw.githubusercontent.com/lapalisse/Geiger5/master/photos/69zTa.jpeg)
+
+Of course, I couldn't resist to test my Geiger-Müller counter, and here is the result:
+![alt text](https://raw.githubusercontent.com/lapalisse/Geiger5/master/photos/69zTa.jpeg)

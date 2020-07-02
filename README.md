@@ -1,5 +1,5 @@
 # Geiger5
-Advanced Arduino Geiger-Müller counter software.
+Advanced Arduino [Geiger-Müller counter](https://en.wikipedia.org/wiki/Geiger_counter) software.
 
 ![alt text](https://raw.githubusercontent.com/lapalisse/Geiger5/master/photos/Capture%20d%E2%80%99e%CC%81cran%202020-06-26%20a%CC%80%2013.56.04.png)
 

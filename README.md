@@ -58,8 +58,11 @@ I'm working on a silly library to improve this...
 
 ## Test with a source of radiation
 
-Just got a capsule that is meant for detecting smoke: it contains a bit of Americium.
+Just got a capsule that is meant for detecting smoke: it contains a bit of Americium. Don't worry, it isn't really dangerous, provided that you don't eat it and wear it in your underwear. 
 ![alt text](https://raw.githubusercontent.com/lapalisse/Geiger5/master/photos/69zTa.jpeg)
 
 Of course, I couldn't resist to test my Geiger-Müller counter, and here is the result:
-![alt text](https://raw.githubusercontent.com/lapalisse/Geiger5/master/photos/69zTa.jpeg)
+![alt text](https://raw.githubusercontent.com/lapalisse/Geiger5/master/photos/KJpZz.jpeg)
+
+As you can see, the values move up, and the nearest, the highest:
+![alt text](https://raw.githubusercontent.com/lapalisse/Geiger5/master/photos/IMG_1226.jpeg)
